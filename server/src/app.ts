@@ -169,6 +169,7 @@ export function createApp(config?: Config) {
   });
   app.use(cors({
     origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+      if (process.env.DISABLE_AUTH === 'true') return callback(null, true);
       callback(null, !origin || allowedCorsOrigins.has(origin));
     },
   }));

@@ -1,4 +1,6 @@
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE !== '/')
+  ? import.meta.env.VITE_API_BASE.replace(/\/$/, '')
+  : import.meta.env.BASE_URL.replace(/\/$/, '');
 const TOKEN_KEY = 'CORTEX_dashboard_token';
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on
