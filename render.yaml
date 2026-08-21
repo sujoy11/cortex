@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: cortex-backend
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "3001"
+      - key: DISABLE_AUTH
+        value: "true"
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: HOST
+        value: "0.0.0.0"

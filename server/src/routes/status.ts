@@ -17,6 +17,11 @@ import { openapiSpec } from '../docs/openapi.js';
 export const statusRouter = Router();
 export const providersRouter = Router();
 
+// Simple health probe for platform health checks (Render, etc.). Unauthenticated.
+statusRouter.get('/healthz', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Cheap "is the SQLite connection answering" probe. getDb() throws before initDb
 // has run, and prepare/get throws if the handle is closed — either way the
 // server is not serviceable, which is exactly the /livez and /readyz 503 signal.

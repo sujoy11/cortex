@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm install && npm run build -w client",
+  "outputDirectory": "client/dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "env": {
+    "VITE_DISABLE_AUTH": "true",
+    "VITE_API_BASE": "https://cortex-backend.onrender.com"
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://cortex-backend.onrender.com/api/$1" },
+    { "source": "/v1/(.*)", "destination": "https://cortex-backend.onrender.com/v1/$1" },
+    { "source": "/healthz", "destination": "https://cortex-backend.onrender.com/healthz" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
