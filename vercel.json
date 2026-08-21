@@ -5,12 +5,12 @@
   "framework": "vite",
   "env": {
     "VITE_DISABLE_AUTH": "true",
-    "VITE_API_BASE": "https://cortex-backend-9hk0.onrender.com"
+    "VITE_API_BASE": "https://craig-gourmet-gardens-documented.trycloudflare.com"
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://cortex-backend-9hk0.onrender.com/api/$1" },
-    { "source": "/v1/(.*)", "destination": "https://cortex-backend-9hk0.onrender.com/v1/$1" },
-    { "source": "/healthz", "destination": "https://cortex-backend-9hk0.onrender.com/healthz" },
+    { "source": "/api/(.*)", "destination": "https://craig-gourmet-gardens-documented.trycloudflare.com/api/$1" },
+    { "source": "/v1/(.*)", "destination": "https://craig-gourmet-gardens-documented.trycloudflare.com/v1/$1" },
+    { "source": "/healthz", "destination": "https://craig-gourmet-gardens-documented.trycloudflare.com/healthz" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
