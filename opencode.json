@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "cortex/auto",
+  "provider": {
+    "cortex": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "cortex (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:3001/v1"
+      },
+      "models": {
+        "auto": {
+          "name": "cortex Auto Router",
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          }
+        }
+      }
+    }
+  }
+}
