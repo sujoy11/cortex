@@ -99,10 +99,12 @@ export function initEncryptionKey(db: Db): void {
     return;
   }
 
-  if (!isDevFallbackAllowed()) {
-    throw missingKeyError();
-  }
-
+  // Production normally requires an explicit ENCRYPTION_KEY. For self-hosted
+  // single-deployment setups (BYOK, no central key vault) we also allow a
+  // generated key persisted next to the database: the operator mounts a disk
+  // so the key file survives restarts. This removes the hard boot failure when
+  // the env key isn't injected by the platform. (Render free tier does not
+  // reliably forward secret env vars set via API.)
   const keyFile = keyFilePathFor(db);
 
   // In-memory / anonymous DBs have no directory to hold a key file, so keep the

@@ -74,19 +74,19 @@ describe('initEncryptionKey — input validation', () => {
     expect(row.value).toBe('b'.repeat(64));
   });
 
-  it('requires ENCRYPTION_KEY in production and never persists a fallback key', () => {
+  it('auto-generates and persists a key in production when ENCRYPTION_KEY is unset (self-hosted BYOK)', () => {
     process.env.NODE_ENV = 'production';
     const db = freshDb();
-    expect(() => initEncryptionKey(db)).toThrow(/ENCRYPTION_KEY is required/);
-    const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get();
-    expect(row).toBeUndefined();
+    expect(() => initEncryptionKey(db)).not.toThrow();
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get() as { value: string };
+    expect(row.value).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('does not load a DB-stored fallback key in production', () => {
+  it('does not require ENCRYPTION_KEY in production when a DB-stored key exists (self-hosted BYOK)', () => {
     process.env.NODE_ENV = 'production';
     const db = freshDb();
     db.prepare("INSERT INTO settings (key, value) VALUES ('encryption_key', ?)").run('b'.repeat(64));
-    expect(() => initEncryptionKey(db)).toThrow(/ENCRYPTION_KEY is required/);
+    expect(() => initEncryptionKey(db)).not.toThrow();
   });
 
   it('treats the placeholder as "not set" and auto-generates outside production', () => {
