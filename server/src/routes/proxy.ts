@@ -58,6 +58,13 @@ export { timingSafeStringEqual } from '../lib/system-prompt.js';
 // valid here — never on the /api dashboard surface. Writes the 401 itself so
 // call sites can simply bail on null.
 function requireInferenceAuth(req: Request, res: Response): ResolvedAuth | null {
+  // DISABLE_AUTH (self-hosted, no-login demo) bypasses the unified-key gate so
+  // the Playground works without a baked bootstrap token. The /api surface is
+  // already unauthenticated in this mode; the /v1 proxy keeps its own key
+  // check by default but follows the same demo contract.
+  if (process.env.DISABLE_AUTH === 'true') {
+    return { kind: 'unified', systemPrompt: null };
+  }
   const auth = resolveAuth(extractApiToken(req));
   if (!auth) {
     res.status(401).json({ error: { message: 'Invalid API key', type: 'authentication_error' } });
