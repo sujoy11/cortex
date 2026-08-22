@@ -24,6 +24,7 @@ import * as apiKeyProxy from '../migrations/20260810_000001_api_key_proxy.js';
 import * as playgroundConversations from '../migrations/20260820_000001_playground_conversations.js';
 import * as multiTenantUserId from '../migrations/20260822_000001_multi_tenant_user_id.js';
 import * as dropUserFk from '../migrations/20260822_000002_drop_user_fk.js';
+import * as ensureRequestType from '../migrations/20260822_000003_ensure_request_type.js';
 
 export interface MigrationModule {
   up(db: Db): void;
@@ -60,6 +61,7 @@ export const API_KEY_PROXY_FILENAME = '20260810_000001_api_key_proxy.ts';
 export const PLAYGROUND_CONVERSATIONS_FILENAME = '20260820_000001_playground_conversations.ts';
 export const MULTI_TENANT_USER_ID_FILENAME = '20260822_000001_multi_tenant_user_id.ts';
 export const DROP_USER_FK_FILENAME = '20260822_000002_drop_user_fk.ts';
+export const ENSURE_REQUEST_TYPE_FILENAME = '20260822_000003_ensure_request_type.ts';
 
 export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: LEGACY_BASELINE_FILENAME, module: legacyBaseline },
@@ -87,4 +89,5 @@ export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: PLAYGROUND_CONVERSATIONS_FILENAME, module: playgroundConversations },
   { filename: MULTI_TENANT_USER_ID_FILENAME, module: multiTenantUserId },
   { filename: DROP_USER_FK_FILENAME, module: dropUserFk },
+  { filename: ENSURE_REQUEST_TYPE_FILENAME, module: ensureRequestType },
 ];
