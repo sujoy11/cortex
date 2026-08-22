@@ -28,6 +28,7 @@ const CLIENT_PROFILES_FILENAME = '20260805_000002_client_profiles.ts';
 const API_KEY_PROXY_FILENAME = '20260810_000001_api_key_proxy.ts';
 const PLAYGROUND_CONVERSATIONS_FILENAME = '20260820_000001_playground_conversations.ts';
 const MULTI_TENANT_USER_ID_FILENAME = '20260822_000001_multi_tenant_user_id.ts';
+const DROP_USER_FK_FILENAME = '20260822_000002_drop_user_fk.ts';
 
 interface SchemaRow {
   type: string;
@@ -102,6 +103,7 @@ describe('migration round trip', () => {
         API_KEY_PROXY_FILENAME,
         PLAYGROUND_CONVERSATIONS_FILENAME,
         MULTI_TENANT_USER_ID_FILENAME,
+        DROP_USER_FK_FILENAME,
       ]);
     } finally {
       db.close();

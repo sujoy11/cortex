@@ -83,3 +83,37 @@ describe('Multi-tenant key isolation (#multi-tenant)', () => {
     expect(r.body.email).toBe('carol@example.com');
   });
 });
+
+// Regression: DISABLE_AUTH demo with NO users in the DB (first-run setup is
+// skipped) must still allow adding keys. requireAuth must resolve userId=NULL
+// (not a fabricated 1) so the api_keys.user_id FK is not violated. This is the
+// exact "Internal server error" the live Render backend hit on key add.
+describe('DISABLE_AUTH key add with empty users table (#multi-tenant)', () => {
+  let app: Express;
+
+  beforeAll(() => {
+    process.env.ENCRYPTION_KEY = '0'.repeat(64);
+    process.env.DISABLE_AUTH = 'true';
+    initDb(':memory:');
+    app = createApp();
+    // NOTE: no createUser() call — users table is empty, as on a fresh
+    // DISABLE_AUTH deploy where setup never ran.
+  });
+
+  it('adds a key without 500 when no users exist', async () => {
+    const r = await call(app, 'POST', '/api/keys', { platform: 'nvidia', key: 'nvapi-abc' }, 'x');
+    expect(r.status).toBe(201);
+    expect(r.body.id).toBeDefined();
+  });
+
+  it('adds a key for a second provider too', async () => {
+    const r = await call(app, 'POST', '/api/keys', { platform: 'openrouter', key: 'sk-or-abc' }, 'x');
+    expect(r.status).toBe(201);
+  });
+
+  it('lists the added keys (scoped to NULL user_id, visible to the operator)', async () => {
+    const r = await call(app, 'GET', '/api/keys', undefined, 'x');
+    expect(r.status).toBe(200);
+    expect((r.body as any[]).length).toBe(2);
+  });
+});

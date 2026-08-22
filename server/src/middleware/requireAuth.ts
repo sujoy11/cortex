@@ -19,8 +19,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     const token = req.headers.authorization?.replace(/^Bearer\s+/i, '')
       ?? (req.headers['x-dashboard-token'] as string | undefined);
     const session = token ? validateSession(token) : undefined;
-    const userId = session?.userId ?? firstUserId() ?? 1;
-    (req as Request & { user?: { userId: number; email: string | null } }).user = {
+    // Resolve a real userId when a session token is supplied (true multi-user
+    // behind a disabled gate), otherwise fall back to the first operator
+    // account. When NO users exist yet (DISABLE_AUTH skips first-run setup),
+    // use NULL instead of a fabricated id — a non-null id with no matching row
+    // violates the api_keys.user_id FK constraint and 500s key writes.
+    const userId = session?.userId ?? firstUserId() ?? null;
+    (req as Request & { user?: { userId: number | null; email: string | null } }).user = {
       userId,
       email: session?.email ?? null,
     };
