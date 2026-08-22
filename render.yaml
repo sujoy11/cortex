@@ -21,4 +21,4 @@ services:
       - key: DISABLE_AUTH
         value: "true"
       - key: ENCRYPTION_KEY
-        value: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        value: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
