@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronRight, CircleAlert, FileText, Paperclip, X } from 'lucide-react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, API_BASE } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { buildModelOptions } from '@/lib/model-groups'
 import { Markdown } from '@/components/markdown'
@@ -684,7 +684,7 @@ export default function PlaygroundPage() {
       const controller = new AbortController()
       abortRef.current = controller
 
-      const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+      const base = API_BASE
       const start = Date.now()
       const res = await fetch(`${base}/v1/chat/completions`, {
         method: 'POST',

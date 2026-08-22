@@ -1,6 +1,10 @@
 const BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE !== '/')
   ? import.meta.env.VITE_API_BASE.replace(/\/$/, '')
   : import.meta.env.BASE_URL.replace(/\/$/, '');
+// Exported so non-/api callers (e.g. the Playground's /v1/chat/completions
+// proxy) hit the backend, not the frontend origin. VITE_API_BASE points at the
+// Render backend; falling back to BASE_URL only when it is unset.
+export const API_BASE = BASE;
 const TOKEN_KEY = 'CORTEX_dashboard_token';
 
 // Dashboard session token (#35). Stored in localStorage; sent as a Bearer on
