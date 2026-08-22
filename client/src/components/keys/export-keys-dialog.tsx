@@ -10,7 +10,7 @@ import { FieldError } from '@/components/ui/field-error'
 import { useI18n } from '@/i18n'
 import { apiFetch, getToken } from '@/lib/api'
 import { toast } from '@/lib/toast'
-import type { ApiKey } from '../../../../shared/types'
+import type { ApiKey } from '@cortex/shared'
 
 type ExportFormat = 'json' | 'env' | 'csv'
 

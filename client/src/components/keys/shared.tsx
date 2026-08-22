@@ -1,4 +1,4 @@
-import type { ApiKeyModel, Platform, ProviderQuotaState } from '../../../../shared/types'
+import type { ApiKeyModel, Platform, ProviderQuotaState } from '@cortex/shared'
 import { ExternalLink } from 'lucide-react'
 import { useI18n } from '@/i18n'
 

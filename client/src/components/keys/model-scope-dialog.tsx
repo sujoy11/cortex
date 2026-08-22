@@ -6,7 +6,7 @@ import { Dialog, DialogPopup, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useI18n } from '@/i18n'
 import { X } from 'lucide-react'
-import type { ApiKey } from '../../../../shared/types'
+import type { ApiKey } from '@cortex/shared'
 
 // #657: relay stations hand out keys that only serve one model group; a key
 // scoped here is skipped by the router for every model outside its list. A

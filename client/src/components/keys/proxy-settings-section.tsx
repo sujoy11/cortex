@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Globe } from 'lucide-react'
 import { useI18n } from '@/i18n'
 import { PLATFORMS, CUSTOM_GROUP } from './shared'
-import type { ApiKey } from '../../../../shared/types'
+import type { ApiKey } from '@cortex/shared'
 
 /** Host of a probe target, for display. Falls back to the raw value so a
  *  malformed override still shows something rather than vanishing. */

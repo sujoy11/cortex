@@ -1,4 +1,4 @@
-import type { ProviderQuotaState } from '../../../../shared/types'
+import type { ProviderQuotaState } from '@cortex/shared'
 import { EmptyState } from '@/components/empty-state'
 import { formatSqliteUtcToLocalTime } from '@/lib/utils'
 import { useI18n } from '@/i18n'
