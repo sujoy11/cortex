@@ -12,11 +12,13 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: PORT
         value: "3001"
-      - key: DISABLE_AUTH
-        value: "true"
       - key: HOST
         value: "0.0.0.0"
+      - key: DISABLE_AUTH
+        value: "true"
       - key: ENCRYPTION_KEY
-        sync: false
+        value: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
