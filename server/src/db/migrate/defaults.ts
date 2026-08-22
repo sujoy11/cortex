@@ -22,6 +22,7 @@ import * as keyModelScope from '../migrations/20260805_000001_key_model_scope.js
 import * as clientProfiles from '../migrations/20260805_000002_client_profiles.js';
 import * as apiKeyProxy from '../migrations/20260810_000001_api_key_proxy.js';
 import * as playgroundConversations from '../migrations/20260820_000001_playground_conversations.js';
+import * as multiTenantUserId from '../migrations/20260822_000001_multi_tenant_user_id.js';
 
 export interface MigrationModule {
   up(db: Db): void;
@@ -56,6 +57,7 @@ export const KEY_MODEL_SCOPE_FILENAME = '20260805_000001_key_model_scope.ts';
 export const CLIENT_PROFILES_FILENAME = '20260805_000002_client_profiles.ts';
 export const API_KEY_PROXY_FILENAME = '20260810_000001_api_key_proxy.ts';
 export const PLAYGROUND_CONVERSATIONS_FILENAME = '20260820_000001_playground_conversations.ts';
+export const MULTI_TENANT_USER_ID_FILENAME = '20260822_000001_multi_tenant_user_id.ts';
 
 export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: LEGACY_BASELINE_FILENAME, module: legacyBaseline },
@@ -81,4 +83,5 @@ export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: CLIENT_PROFILES_FILENAME, module: clientProfiles },
   { filename: API_KEY_PROXY_FILENAME, module: apiKeyProxy },
   { filename: PLAYGROUND_CONVERSATIONS_FILENAME, module: playgroundConversations },
+  { filename: MULTI_TENANT_USER_ID_FILENAME, module: multiTenantUserId },
 ];

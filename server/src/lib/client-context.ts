@@ -6,6 +6,10 @@ export interface ClientContext {
   ip: string | null;
   userAgent: string | null;
   agent: ClientAgent | null;
+  // The dashboard user on whose behalf the request runs (multi-tenant BYOK).
+  // Null when the caller is an app client using a unified API key (the /v1
+  // proxy), or when no dashboard session is resolved.
+  userId: number | null;
 }
 
 // Request-scoped caller identity, readable from anywhere below the middleware
@@ -38,8 +42,9 @@ function clientLoggingEnabled(): boolean {
 }
 
 export function clientContextMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const userId = (req as any).user?.userId ?? null;
   if (!clientLoggingEnabled()) {
-    storage.run({ ip: null, userAgent: null, agent: null }, next);
+    storage.run({ ip: null, userAgent: null, agent: null, userId }, next);
     return;
   }
   const ua = req.headers['user-agent'];
@@ -47,9 +52,10 @@ export function clientContextMiddleware(req: Request, _res: Response, next: Next
     ip: resolveClientIp(req),
     userAgent: typeof ua === 'string' ? ua.slice(0, 256) : null,
     agent: classifyClientAgent(req),
+    userId,
   }, next);
 }
 
 export function getClientContext(): ClientContext {
-  return storage.getStore() ?? { ip: null, userAgent: null, agent: null };
+  return storage.getStore() ?? { ip: null, userAgent: null, agent: null, userId: null };
 }

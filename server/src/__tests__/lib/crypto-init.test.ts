@@ -38,22 +38,28 @@ describe('initEncryptionKey — input validation', () => {
     expect(decrypt(enc.encrypted, enc.iv, enc.authTag)).toBe('hello');
   });
 
-  it('throws on too-short env key (typo guard)', () => {
+  it('ignores a too-short env key and falls back to a generated key (self-hosted BYOK)', () => {
     process.env.ENCRYPTION_KEY = 'abc';
     const db = freshDb();
-    expect(() => initEncryptionKey(db)).toThrow(/Invalid ENCRYPTION_KEY \(env\).+expected 64 hex chars/);
+    expect(() => initEncryptionKey(db)).not.toThrow();
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get() as { value: string } | undefined;
+    expect(row?.value).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('throws on too-long env key', () => {
+  it('ignores a too-long env key and falls back to a generated key', () => {
     process.env.ENCRYPTION_KEY = 'a'.repeat(80);
     const db = freshDb();
-    expect(() => initEncryptionKey(db)).toThrow(/Invalid ENCRYPTION_KEY \(env\)/);
+    expect(() => initEncryptionKey(db)).not.toThrow();
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get() as { value: string } | undefined;
+    expect(row?.value).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('throws on non-hex env key of correct length', () => {
+  it('ignores a non-hex env key of correct length and falls back to a generated key', () => {
     process.env.ENCRYPTION_KEY = 'g'.repeat(64); // g is not hex
     const db = freshDb();
-    expect(() => initEncryptionKey(db)).toThrow(/Invalid ENCRYPTION_KEY \(env\)/);
+    expect(() => initEncryptionKey(db)).not.toThrow();
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'encryption_key'").get() as { value: string } | undefined;
+    expect(row?.value).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('auto-generates and persists a key outside production when ENCRYPTION_KEY is unset', () => {

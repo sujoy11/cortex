@@ -137,7 +137,7 @@ function splitRawKey(rawKey: string) {
   };
 }
 
-function insertImportedKey(platform: (typeof PLATFORMS)[number], keyName: string, keyValue: string) {
+function insertImportedKey(platform: (typeof PLATFORMS)[number], keyName: string, keyValue: string, userId: number | null) {
   if (platform === 'custom') {
     throw new Error('Custom providers must be added with a base URL');
   }
@@ -148,9 +148,9 @@ function insertImportedKey(platform: (typeof PLATFORMS)[number], keyName: string
   const db = getDb();
   const { encrypted, iv, authTag } = encrypt(keyValue.trim());
   db.prepare(`
-    INSERT INTO api_keys (platform, label, encrypted_key, iv, auth_tag, status, enabled)
-    VALUES (?, ?, ?, ?, ?, 'unknown', 1)
-  `).run(platform, keyName, encrypted, iv, authTag);
+    INSERT INTO api_keys (platform, label, encrypted_key, iv, auth_tag, status, enabled, user_id)
+    VALUES (?, ?, ?, ?, ?, 'unknown', 1, ?)
+  `).run(platform, keyName, encrypted, iv, authTag, userId);
 }
 
 // Count enabled catalog models for a platform. Used to warn when a key is
@@ -240,10 +240,13 @@ keysRouter.get('/providers', (_req: Request, res: Response) => {
   });
 });
 
-// List all keys (masked)
-keysRouter.get('/', (_req: Request, res: Response) => {
+// List all keys (masked) — scoped to the caller's user. NULL user_id rows are
+// legacy operator-global keys (pre-multi-tenancy installs) and are shown to
+// every authenticated caller so the operator's existing setup keeps working.
+keysRouter.get('/', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
   const db = getDb();
-  const rows = db.prepare('SELECT * FROM api_keys ORDER BY created_at DESC').all() as any[];
+  const rows = db.prepare('SELECT * FROM api_keys WHERE user_id = ? OR user_id IS NULL ORDER BY created_at DESC').all(userId) as any[];
 
   const customModels = [
     ...db.prepare(`
@@ -397,16 +400,17 @@ keysRouter.get('/export', (req: Request, res: Response) => {
       return;
     }
   }
+  const userId = (req as any).user?.userId;
   const db = getDb();
   const format = (req.query.format as string) ?? 'json';
   const healthyOnly = req.query.healthy === 'true';
 
-  let whereClause = '';
+  let whereClause = 'WHERE (user_id = ? OR user_id IS NULL)';
   if (healthyOnly) {
-    whereClause = "WHERE status = 'healthy'";
+    whereClause += " AND status = 'healthy'";
   }
 
-  const rows = db.prepare(`SELECT * FROM api_keys ${whereClause} ORDER BY platform, created_at ASC`).all() as any[];
+  const rows = db.prepare(`SELECT * FROM api_keys ${whereClause} ORDER BY platform, created_at ASC`).all(userId) as any[];
 
   // Decrypt and filter — only export keys with a real value
   const decryptedKeys = rows
@@ -525,8 +529,8 @@ keysRouter.post('/:id/reveal', (req: Request, res: Response) => {
     return;
   }
 
-  const row = getDb().prepare('SELECT encrypted_key, iv, auth_tag FROM api_keys WHERE id = ?')
-    .get(id) as { encrypted_key: string; iv: string; auth_tag: string } | undefined;
+  const row = getDb().prepare('SELECT encrypted_key, iv, auth_tag FROM api_keys WHERE id = ? AND (user_id = ? OR user_id IS NULL)')
+    .get(id, (req as any).user?.userId) as { encrypted_key: string; iv: string; auth_tag: string } | undefined;
   if (!row) {
     res.status(404).json({ error: { message: 'Key not found' } });
     return;
@@ -541,6 +545,7 @@ keysRouter.post('/:id/reveal', (req: Request, res: Response) => {
 
 // Add a key
 keysRouter.post('/', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
   const parsed = addKeySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: { message: parsed.error.errors.map(e => e.message).join(', ') } });
@@ -563,9 +568,10 @@ keysRouter.post('/', (req: Request, res: Response) => {
   const db = getDb();
 
   // A keyless provider needs only one sentinel row — re-enable an existing one
-  // instead of piling up duplicates each time the user clicks "Add".
+  // instead of piling up duplicates each time the user clicks "Add". Scoped to
+  // the caller's user so two users don't fight over the same sentinel.
   if (isKeyless) {
-    const existing = db.prepare('SELECT id FROM api_keys WHERE platform = ? LIMIT 1').get(platform) as { id: number } | undefined;
+    const existing = db.prepare('SELECT id FROM api_keys WHERE platform = ? AND (user_id = ? OR user_id IS NULL) LIMIT 1').get(platform, userId) as { id: number } | undefined;
     if (existing) {
       db.prepare("UPDATE api_keys SET enabled = 1, status = 'unknown' WHERE id = ?").run(existing.id);
       res.status(200).json({
@@ -588,9 +594,9 @@ keysRouter.post('/', (req: Request, res: Response) => {
   const proxyUrl = parsed.data.proxyUrl?.trim() ?? '';
   const proxy = encryptProxyUrl(proxyUrl);
   const result = db.prepare(`
-    INSERT INTO api_keys (platform, label, encrypted_key, iv, auth_tag, status, enabled, proxy_encrypted, proxy_iv, proxy_auth_tag)
-    VALUES (?, ?, ?, ?, ?, 'unknown', 1, ?, ?, ?)
-  `).run(platform, label ?? '', encrypted, iv, authTag, proxy.encrypted, proxy.iv, proxy.authTag);
+    INSERT INTO api_keys (platform, label, encrypted_key, iv, auth_tag, status, enabled, proxy_encrypted, proxy_iv, proxy_auth_tag, user_id)
+    VALUES (?, ?, ?, ?, ?, 'unknown', 1, ?, ?, ?, ?)
+  `).run(platform, label ?? '', encrypted, iv, authTag, proxy.encrypted, proxy.iv, proxy.authTag, userId);
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -1110,7 +1116,7 @@ keysRouter.post('/import', (req: Request, res: Response, next: NextFunction) => 
         }
 
         try {
-          insertImportedKey(platformParse.data, keyName, keyValue);
+          insertImportedKey(platformParse.data, keyName, keyValue, (req as any).user?.userId ?? null);
           imported.push({ keyName, platform: platformParse.data });
         } catch (insertErr) {
           errors.push({ key: keyName, error: (insertErr as Error).message });
@@ -1266,7 +1272,7 @@ keysRouter.post('/import-selected', async (req: Request, res: Response) => {
     }
 
     try {
-      insertImportedKey(key.platform, keyName, key.keyValue);
+      insertImportedKey(key.platform, keyName, key.keyValue, (req as any).user?.userId ?? null);
       imported++;
       existingKeys.add(key.keyValue.trim());
     } catch (err) {
@@ -1292,7 +1298,8 @@ keysRouter.delete('/:id', (req: Request, res: Response) => {
   }
 
   const db = getDb();
-  const row = db.prepare('SELECT platform, base_url FROM api_keys WHERE id = ?').get(id) as { platform: string; base_url: string | null } | undefined;
+  const userId = (req as any).user?.userId;
+  const row = db.prepare('SELECT platform, base_url FROM api_keys WHERE id = ? AND (user_id = ? OR user_id IS NULL)').get(id, userId) as { platform: string; base_url: string | null } | undefined;
   if (!row) {
     res.status(404).json({ error: { message: 'Key not found' } });
     return;
@@ -1405,10 +1412,11 @@ keysRouter.patch('/:id', (req: Request, res: Response) => {
     values.push(scopeIds.length > 0 ? JSON.stringify(scopeIds) : null);
   }
 
-  values.push(id);
+  const userId = (req as any).user?.userId;
+  values.push(id, userId);
 
   const db = getDb();
-  const result = db.prepare(`UPDATE api_keys SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+  const result = db.prepare(`UPDATE api_keys SET ${updates.join(', ')} WHERE id = ? AND (user_id = ? OR user_id IS NULL)`).run(...values);
 
   if (result.changes === 0) {
     res.status(404).json({ error: { message: 'Key not found' } });

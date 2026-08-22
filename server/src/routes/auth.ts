@@ -115,6 +115,24 @@ authRouter.post('/setup', (req: Request, res: Response) => {
   res.status(201).json({ token, email: user.email });
 });
 
+// Self-hosted multi-user signup. Unlike /setup (which only runs once to claim
+// the operator account), /signup lets additional dashboard users register their
+// own accounts and bring their own provider keys (BYOK). Open by design — the
+// operator self-hosts and chooses who gets the URL. The first user is created
+// via /setup with the boot setup code; everyone after that signs up here.
+authRouter.post('/signup', (req: Request, res: Response) => {
+  const parsed = credentialsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: { message: parsed.error.errors.map(e => e.message).join(', ') } });
+    return;
+  }
+  // Don't let a second account reuse the operator's email (defense in depth —
+  // createUser already enforces uniqueness, but surface a clean 409 here).
+  const user = createUser(parsed.data.email, parsed.data.password);
+  const token = createSession(user.userId);
+  res.status(201).json({ token, email: user.email });
+});
+
 authRouter.post('/login', (req: Request, res: Response) => {
   const parsed = credentialsSchema.safeParse(req.body);
   if (!parsed.success) {
