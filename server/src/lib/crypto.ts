@@ -92,11 +92,18 @@ function writeKeyFileAtomic(keyFile: string, hex: string): void {
  * freshly generated key written to the file.
  */
 export function initEncryptionKey(db: Db): void {
-  // 1. Explicit env key always wins.
+  // 1. Explicit env key wins — but only if it's a valid 64-char hex key.
+  // An invalid/misconfigured value (wrong length, non-hex) is ignored so the
+  // server falls through to the auto-generated key file instead of crashing
+  // on boot (common when a platform injects a malformed secret).
   const envKey = process.env.ENCRYPTION_KEY;
   if (envKey && envKey !== PLACEHOLDER_KEY) {
-    cachedKey = parseHexKey(envKey, 'env');
-    return;
+    try {
+      cachedKey = parseHexKey(envKey, 'env');
+      return;
+    } catch {
+      console.warn('[crypto] ENCRYPTION_KEY is present but invalid — ignoring it and using the generated key file.');
+    }
   }
 
   // Production normally requires an explicit ENCRYPTION_KEY. For self-hosted
