@@ -7,7 +7,7 @@ services:
     branch: main
     rootDir: ""
     buildCommand: npm install && npm run build -w server
-    startCommand: npm rebuild better-sqlite3 && node server/dist/index.js
+    startCommand: node server/dist/index.js
     healthCheckPath: /healthz
     envVars:
       - key: NODE_VERSION
@@ -21,4 +21,4 @@ services:
       - key: DISABLE_AUTH
         value: "true"
       - key: ENCRYPTION_KEY
-        value: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        value: "2ba22e53c2483c99d5df395b0c3ac2db98c920c43ed5dafa45017a9c8c0d4b55"
